@@ -12,13 +12,16 @@ source .venv/bin/activate
 pip install -e ".[dev]"
 cp .env.example .env
 docker compose up -d db
+set -a
+. ./.env
+set +a
 alembic upgrade head
 uvicorn ledgerlock.main:app --reload
 ```
 
-Set `DATABASE_URL` in the environment (or export the value from `.env`) before
-starting the API. Create accounts by inserting rows into the `accounts` table;
-the transfer endpoint does not expose account administration.
+The Compose database uses passwordless trust authentication and binds only to
+loopback for local development. Create accounts by inserting rows into the
+`accounts` table; the transfer endpoint does not expose account administration.
 
 ## API
 

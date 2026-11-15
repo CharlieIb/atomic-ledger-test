@@ -6,9 +6,9 @@ import pytest
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
-from ledgerlock.models import Account
+from ledgerlock.models import Account, IdempotencyKey, LedgerEntry
 from ledgerlock.schemas.transfer import TransferRequest
-from ledgerlock.services.transfer_service import transfer_funds
+from ledgerlock.services.transfer_service import InsufficientFunds, transfer_funds
 
 
 @pytest.mark.skipif(
@@ -39,7 +39,7 @@ def test_concurrent_transfers_do_not_overdraw():
                     key,
                 )
                 return "completed"
-            except Exception:
+            except InsufficientFunds:
                 return "rejected"
 
     try:
@@ -51,6 +51,13 @@ def test_concurrent_transfers_do_not_overdraw():
             assert session.get(Account, 91002).balance == Decimal("75.00")
     finally:
         with factory.begin() as session:
+            session.query(LedgerEntry).filter(
+                LedgerEntry.account_id.in_([91001, 91002])
+            ).delete(synchronize_session=False)
+            session.query(IdempotencyKey).filter(
+                IdempotencyKey.source_account_id.in_([91001, 91002])
+                | IdempotencyKey.destination_account_id.in_([91001, 91002])
+            ).delete(synchronize_session=False)
             session.query(Account).filter(Account.id.in_([91001, 91002])).delete(
                 synchronize_session=False
             )
