@@ -1,0 +1,31 @@
+[build-system]
+requires = ["setuptools>=75"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ledgerlock"
+version = "0.1.0"
+description = "A concurrent-safe double-entry transfer API"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "alembic>=1.15.2",
+    "fastapi>=0.115.12",
+    "psycopg[binary]>=3.2.6",
+    "pydantic>=2.11.3",
+    "sqlalchemy>=2.0.40",
+    "uvicorn[standard]>=0.34.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "httpx>=0.28.1",
+    "pytest>=8.3.5",
+]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
